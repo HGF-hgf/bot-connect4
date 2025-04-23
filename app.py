@@ -29,8 +29,9 @@ class AIResponse(BaseModel):
 class Connect4Agent:
     def __init__(self):
         self.game = Connect4()
-        self.strategy = ucb2_agent(5)
+        # self.strategy = ucb2_agent(7)
         self.pos = self.game.get_initial_position()
+        self.computer_moves_made = 0 
         self.old_board = [[0 for _ in range(7)] for _ in range(6)]
 
     def board_move(self, col, turn):
@@ -79,7 +80,19 @@ class Connect4Agent:
 
 
         # 4) Let the AI choose its move
-        ai_move = self.strategy(self.pos)
+        if self.computer_moves_made <= 0:
+            strat = ucb2_agent(1)
+        elif self.computer_moves_made <= 2:
+            strat = ucb2_agent(2)
+        elif self.computer_moves_made <= 7:
+            strat = ucb2_agent(7)
+        elif self.computer_moves_made <= 10:
+            strat = ucb2_agent(2)
+        else:
+            strat = ucb2_agent(1)
+
+        ai_move = strat(self.pos)
+        self.computer_moves_made += 1
 
         # 5) Apply AI move to both Position and old_board
         self.pos = self.pos.move(ai_move)

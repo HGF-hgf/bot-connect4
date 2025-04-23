@@ -1,6 +1,7 @@
 import random
 import math
 import time
+import multiprocessing
 
 def get_nodes(initial_pos, time_limit):
     nodes = {}
@@ -130,3 +131,34 @@ def get_score(N, ni, r, player, c=2.0):
     if ni == 0:
         return float('inf') if player == 0 else float('-inf')
     return r + math.sqrt(c * math.log(N) / ni) if player == 0 else r - math.sqrt(c * math.log(N) / ni)
+
+
+def simulate_one_worker(pos, time_limit):
+    return get_nodes(pos, time_limit)
+
+def parallel_ucb2_agent(time_limit, num_processes=4):
+    def strat(pos):
+        with multiprocessing.Pool(num_processes) as pool:
+            results = pool.starmap(
+                simulate_one_worker,
+                [(pos, time_limit / num_processes)] * num_processes
+            )
+        
+        # Merge all node dictionaries
+        merged_nodes = {}
+        for nodes in results:
+            for p, (w, n, parent_dict) in nodes.items():
+                if p not in merged_nodes:
+                    merged_nodes[p] = (w, n, parent_dict.copy())
+                else:
+                    w0, n0, pd0 = merged_nodes[p]
+                    for k in parent_dict:
+                        pd0[k] = pd0.get(k, 0) + parent_dict[k]
+                    merged_nodes[p] = (w0 + w, n0 + n, pd0)
+        
+        # Use merged nodes to pick best move
+        return pick_best_move(pos, merged_nodes)
+    return strat
+
+# Use this function like:
+# strat = parallel_ucb2_agent(7.0, num_processes=4)
