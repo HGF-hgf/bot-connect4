@@ -29,7 +29,7 @@ class AIResponse(BaseModel):
 class Connect4Agent:
     def __init__(self):
         self.game = Connect4()
-        self.strategy = ucb2_agent(3)
+        self.strategy = ucb2_agent(5)
         self.pos = self.game.get_initial_position()
         self.old_board = [[0 for _ in range(7)] for _ in range(6)]
 
